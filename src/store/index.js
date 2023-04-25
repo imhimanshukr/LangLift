@@ -28,8 +28,14 @@ export default new Vuex.Store({
     },    
     async translateWord({ commit }, text) {
       const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${text.sourceLang}&tl=${text.targetLang}&dt=t&q=${encodeURI(text.sourceText)}`)
-      console.log("wordd: ", response);
-      commit("setTranslatedMeaning", response.data[0][0][0])
+      console.log("wordd: ", response.data);
+      let translatedMeaning = response.data[0].reduce((acc, curr) => {
+        if (curr[0]) {
+          acc += curr[0];
+        }
+        return acc;
+      }, "");
+      commit("setTranslatedMeaning", translatedMeaning)
     }
   },
 })

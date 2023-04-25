@@ -8,14 +8,13 @@
           sm="6"
         >
           <v-text-field
-            outlined
+            filled
             rounded
             dark
             clearable
             dense
-            prepend-inner-icon="mdi-magnify"
-            append-icon="mdi-microphone"
-            placeholder="Search"
+            append-icon="mdi-magnify"
+            placeholder="Search history, bookmarks"
           ></v-text-field>
         </v-col>
       </v-row>
