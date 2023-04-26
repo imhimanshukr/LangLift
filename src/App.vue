@@ -1,8 +1,8 @@
 <template>
   <v-app id="inspire">
-    <Sidebar/>
+    <!-- <Sidebar/> -->
     <Navbar/>
-    <v-main class="primary-bg">
+    <v-main class="primary-bg pt-16">
       <router-view/>
     </v-main>
   </v-app>
@@ -10,13 +10,13 @@
 
 <script>
 import Navbar from "./components/Navbar.vue";
-import Sidebar from "./components/Sidebar.vue";
+// import Sidebar from "./components/Sidebar.vue";
 
 export default {
   name: 'App',
   components:{
     Navbar,
-    Sidebar
+    // Sidebar
   }
 };
 </script>

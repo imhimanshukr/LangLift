@@ -55,6 +55,38 @@
                 </div>
             </v-col>
         </v-row>
+        <v-card class="pa-4 my-4 rounded-lg" color="#1B1B1F">
+        <v-tabs
+          v-model="currentItem"
+          fixed-tabs
+          dark
+          slider-color="white"
+          background-color="#1B1B1F"
+        >
+          <v-tab
+            v-for="item in items"
+            :key="item"
+            :href="'#tab-' + item"
+          >
+            {{ item }}
+          </v-tab>
+        </v-tabs>
+
+    <v-tabs-items v-model="currentItem">
+      <v-tab-item
+        v-for="item in items.concat(more)"
+        :key="item"
+        :value="'tab-' + item"
+      >
+        <v-card flat>
+          <v-card-text>
+            <h2>{{ item }}</h2>
+            {{ text }}
+          </v-card-text>
+        </v-card>
+      </v-tab-item>
+    </v-tabs-items>
+  </v-card>
     </v-container>
 </template>
 <script>
@@ -74,10 +106,15 @@ export default {
             activeMic: false,
             activeSpeaker: false,
             favoriteActive: false,
-            text: '',
             isCopied: false,
             recognition: null,
             message: "",
+
+            currentItem: 'tab-Web',
+      items: [
+        'Web', 'Shopping', 'Videos', 'Images',
+      ],
+      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
         }
     },
     mounted() {
@@ -186,6 +223,8 @@ export default {
                 // eslint-disable-next-line no-undef
                 this.recognition = new webkitSpeechRecognition();
                 this.recognition.lang = "en-US";
+                this.recognition.interimResults = false;
+                this.recognition.continuous = true;
                 this.recognition.onresult = event => {
                     const results = event.results[event.resultIndex];
                     const transcript = results[0].transcript;
@@ -234,7 +273,7 @@ export default {
             }
         },
         targetLang(targetLang) {
-            if (targetLang && this.sourceLang) {
+            if (targetLang && this.sourceLang && this.fromText) {
                 this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: targetLang.sign || targetLang, sourceText: this.fromText })
             } else {
                 this.$store.state.meaning = "";
@@ -290,5 +329,11 @@ export default {
 }
 ::v-deep .theme--light.v-icon:focus::after {
     opacity: 0;
+}
+::v-deep .v-slide-group:not(.v-slide-group--has-affixes) > .v-slide-group__prev, .v-slide-group:not(.v-slide-group--has-affixes) > .v-slide-group__next {
+    display: none !important;
+}
+::v-deep .v-tabs {
+    max-width: calc(100vw - 120px);
 }
 </style>
