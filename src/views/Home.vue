@@ -1,8 +1,8 @@
 <template>
     <v-container fluid>
-        <div class=" mt-4 d-flex align-center">
+        <div class=" mt-4 d-flex align-center" v-if="favorite.length > 0">
             <h3 class="fs-14 mr-3 text-no-wrap white--text">Your Favorites</h3>
-            <v-tabs background-color="transparent" center-active>
+            <v-tabs background-color="transparent" center-active class="favorites">
                 <v-tab class="favorite-tab mr-3" :class="item.active ? 'active-tab' : ''" v-for="(item, index) in favorite"
                     :key="index" @click="selectFavorite(item)">{{
                         item.from.name }} - {{ item.to.name }}</v-tab>
@@ -18,13 +18,12 @@
                             @change="getSourceLang"></v-autocomplete>
                     </div>
                     <v-textarea rows="4" filled hide-details color="#1B1B1F" dark rounded auto-grow
-                        class="no-focus-outline mt-4" v-model="fromText" placeholder="Enter Text"></v-textarea>
+                        class="no-focus-outline mt-4" v-model="sourceText" placeholder="Enter Text"></v-textarea>
                     <div class="d-flex justify-end mt-4">
                         <v-icon class="pa-3 fs-16 rounded-xl pointer" :class="favoriteActive ? 'skyblue-bg' : 'primary-bg'"
                             @click="addFavorite">{{ favoriteActive ? 'mdi-cards-heart' : 'mdi-heart-outline' }}</v-icon>
                         <v-icon class="pa-3 fs-16 ml-2 rounded-xl pointer" :class="activeMic ? 'skyblue-bg' : 'primary-bg'"
                             @click="record()">mdi-microphone</v-icon>
-                            <audio ref="audioElement" src="../assets/sound1.mp3"></audio>
                     </div>
                 </div>
             </v-col>
@@ -40,13 +39,13 @@
                             @change="getTargetLang"></v-autocomplete>
                     </div>
                     <v-textarea rows="4" filled hide-details color="#1B1B1F" dark rounded auto-grow
-                        class="no-focus-outline mt-4" v-model="$store.state.meaning" placeholder="Translation"></v-textarea>
+                        class="no-focus-outline mt-4" v-model="targetText" placeholder="Translation"></v-textarea>
                     <div class="d-flex justify-end align-center mt-4">
                         <div class="d-flex">
-                            <div @click="speak()">
+                            <div @click="playMeaning()">
                                 <v-icon class="pa-3 fs-16 rounded-xl pointer"
                                     :class="activeSpeaker ? 'skyblue-bg' : 'primary-bg'">mdi-volume-high</v-icon>
-                                <speech :text="text" ref="speech"></speech>
+                                <speech :text="$store.state.result" ref="speech"></speech>
                             </div>
                                 <v-icon class="pa-3 fs-16 rounded-xl ml-2 pointer" @click="copyText" :class="isCopied ? 'skyblue-bg' : 'primary-bg'">{{isCopied ? 'mdi-check' : 'mdi-content-copy'}}</v-icon>
                             <v-icon class="pa-3 fs-16 ml-2 rounded-xl pointer primary-bg">mdi-bookmark-outline</v-icon>
@@ -55,38 +54,57 @@
                 </div>
             </v-col>
         </v-row>
-        <v-card class="pa-4 my-4 rounded-lg" color="#1B1B1F">
-        <v-tabs
-          v-model="currentItem"
-          fixed-tabs
-          dark
-          slider-color="white"
-          background-color="#1B1B1F"
-        >
-          <v-tab
-            v-for="item in items"
-            :key="item"
-            :href="'#tab-' + item"
-          >
-            {{ item }}
-          </v-tab>
-        </v-tabs>
-
-    <v-tabs-items v-model="currentItem">
-      <v-tab-item
-        v-for="item in items.concat(more)"
-        :key="item"
-        :value="'tab-' + item"
+        <v-card class="pa-4 my-4 rounded-xl" color="#1B1B1F" v-if="$store.state.meaning.length > 0 && targetText && sourceText">
+            <div class="d-flex justify-space-between align-baseline">
+                <v-tabs
+                v-model="currentItem"
+        dark
+        center-active
+        background-color="transparent"
       >
-        <v-card flat>
-          <v-card-text>
-            <h2>{{ item }}</h2>
-            {{ text }}
-          </v-card-text>
-        </v-card>
-      </v-tab-item>
-    </v-tabs-items>
-  </v-card>
+        <v-tab
+          v-for="item in $store.state.meaning"
+          :key="item.partOfSpeech"
+          :href="'#tab-' + item.partOfSpeech"
+          class="pa-2 rounded-xl"
+          active-class="active-result-tab"
+        >
+        {{ item.partOfSpeech }}
+    </v-tab>
+</v-tabs>
+    <v-icon class="pa-3 fs-16 ml-2 rounded-xl pointer" :class="isDefinitionPlay ? 'skyblue-bg' : 'primary-bg'"
+    @click="playDefinition()" v-if="$store.state.wordAudio">mdi-microphone</v-icon>
+    <audio ref="audioElement" :src="$store.state.wordAudio" @ended="onAudioEnded"></audio>
+</div>
+      <v-tabs-items dark v-model="currentItem" class="mt-4">
+        <v-tab-item
+          v-for="(item) in $store.state.meaning"
+          :key="item.partOfSpeech"
+          :value="'tab-' + item.partOfSpeech"
+        >
+          <v-card color="#111116" dark>
+            <v-card-text>
+              <i class="fs-14">{{ item.definitions[0].definition }}</i>
+                <div v-if="item.antonyms.length > 0" class="mt-4">
+                    <p class="d-flex"><span>Antonyms: </span> <span class="d-flex flex-wrap"> <i v-for="(item, index) in item.antonyms" :key="index" class="mr-3"> {{ item }}</i></span></p>
+                </div>
+                <div v-if="item.synonyms.length > 0">
+                    <p class="d-flex"><span>Synonyms: </span> <span class="d-flex flex-wrap"><i v-for="(item, index) in item.synonyms" :key="index" class="mr-3"> {{ item }}</i></span></p>
+                </div>
+                <div class="d-flex mt-3">
+                        <h3 class="fs-14 mr-2">Definitions: </h3>
+                        <div class="defintion-box">
+                            <div v-for="(definition, index) in item.definitions" :key="index" class="mb-2 definition-item">
+                                <p class="pa-0 ma-0" v-if="definition.definition">{{ definition.definition }}</p>
+                                <i class="pa-0" v-if="definition.example">eg: {{ definition.example }}</i>
+                            </div>
+                        </div>
+                    </div>
+            </v-card-text>
+          </v-card>
+        </v-tab-item>
+      </v-tabs-items>
+    </v-card>
     </v-container>
 </template>
 <script>
@@ -94,27 +112,23 @@ import { mapActions } from 'vuex';
 import Speech from 'vue-speech';
 // import { slugify } from 'transliteration'
 
-export default {
+export default{
     name: "HomePage",
     data() {
         return {
             favorite: [],
             sourceLang: {},
             targetLang: {},
-            fromText: "",
-            intoText: "",
+            sourceText: "",
             activeMic: false,
             activeSpeaker: false,
             favoriteActive: false,
             isCopied: false,
             recognition: null,
             message: "",
-
             currentItem: 'tab-Web',
-      items: [
-        'Web', 'Shopping', 'Videos', 'Images',
-      ],
-      text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+            showMore: false,
+            isDefinitionPlay: false,
         }
     },
     mounted() {
@@ -143,14 +157,14 @@ export default {
         }
     },
     methods: {
-        ...mapActions(["getLanguageList", "translateWord"]),
+        ...mapActions(["getLanguageList", "translateWord", "getWordMeaning"]),
         swapLanguage() {
             const targetLang = this.targetLang;
             this.targetLang = this.sourceLang;
             this.sourceLang = targetLang;
-            const intoText = this.$store.state.meaning;
-            this.$store.state.meaning = "";
-            this.fromText = intoText;
+            const targetText = this.$store.state.result;
+            this.$store.state.result = "";
+            this.sourceText = targetText;
             this.checkFavorite();
         },
         addFavorite() {
@@ -189,7 +203,7 @@ export default {
         getSourceLang(event) {
             const sourceLang = this.getLanguageInfo(event);
             this.sourceLang = sourceLang;
-            this.fromText = "";
+            this.sourceText = "";
             this.checkFavorite();
         },
         getTargetLang(event) {
@@ -218,8 +232,7 @@ export default {
         record(){
             this.activeMic = !this.activeMic;
             if(this.activeMic){
-                this.$refs.audioElement.play();
-                this.fromText = "";
+                this.sourceText = "";
                 // eslint-disable-next-line no-undef
                 this.recognition = new webkitSpeechRecognition();
                 this.recognition.lang = "en-US";
@@ -228,57 +241,73 @@ export default {
                 this.recognition.onresult = event => {
                     const results = event.results[event.resultIndex];
                     const transcript = results[0].transcript;
-                    this.fromText += transcript;
+                    this.sourceText += transcript;
                 };
                 this.recognition.start();
             } else {
                 this.recognition.stop();
             }
         },
-        speak() {
-            this.activeSpeaker = !this.activeSpeaker;
-            if (this.activeSpeaker && this.$store.state.meaning) {
-                // const latinText = slugify(this.$store.state.meaning)
-                // console.log("latin: ", latinText);
-                // const utterance = new SpeechSynthesisUtterance(latinText);
-                const utterance = new SpeechSynthesisUtterance(this.$store.state.meaning);
-                console.log("utterance: ", utterance);
-                utterance.lang = "hi-IND";
-                speechSynthesis.speak(utterance);
+        playMeaning() {
+            if(this.$store.state.result){
+                this.activeSpeaker = true;
+                    const utterance = new SpeechSynthesisUtterance(this.$store.state.result);
+                    utterance.lang = "hi-IND";
+                    utterance.onend = () => {
+                        this.activeSpeaker = false;
+                    }
+                    speechSynthesis.speak(utterance);
             }
         },
         copyText(){
-            if(this.$store.state.meaning){
-                navigator.clipboard.writeText(this.$store.state.meaning)
+            if(this.$store.state.result){
+                navigator.clipboard.writeText(this.$store.state.result)
                 this.isCopied = true;
                 setTimeout(() => {
                     this.isCopied = false;
-                }, 1000);
+                }, 600);
             }
         },
+        playDefinition(){
+            this.isDefinitionPlay = true;
+            this.$refs.audioElement.play();
+        },
+    onAudioEnded() {
+        this.isDefinitionPlay = false;
+    },
         reset() {
             this.activeMic = false;
             this.activeSpeaker = false;
-            this.fromText = "";
+            this.sourceText = "";
             this.checkFavorite();
         }
 
     },
     watch: {
-        fromText(sourceText) {
+        sourceText(sourceText) {
             if (sourceText && this.targetLang) {
                 this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: this.targetLang.sign || this.targetLang, sourceText })
+                this.targetText = this.$store.state.result;
             } else {
-                this.$store.state.meaning = "";
+                this.$store.state.result = "";
+            }
+            if(this.sourceLang.sign === "en"){
+                this.getWordMeaning(sourceText)
             }
         },
         targetLang(targetLang) {
-            if (targetLang && this.sourceLang && this.fromText) {
-                this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: targetLang.sign || targetLang, sourceText: this.fromText })
+            if (targetLang && this.sourceLang && this.sourceText) {
+                this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: targetLang.sign || targetLang, sourceText: this.sourceText })
             } else {
-                this.$store.state.meaning = "";
+                this.$store.state.result = "";
             }
         },
+    },
+    computed:{
+        targetText(){
+            this.getWordMeaning(this.$store.state.result)
+            return this.$store.state.result
+        }
     },
     components: {
         Speech,
@@ -333,7 +362,37 @@ export default {
 ::v-deep .v-slide-group:not(.v-slide-group--has-affixes) > .v-slide-group__prev, .v-slide-group:not(.v-slide-group--has-affixes) > .v-slide-group__next {
     display: none !important;
 }
-::v-deep .v-tabs {
+::v-deep .favorites.v-tabs {
     max-width: calc(100vw - 120px);
+}
+.active-result-tab{
+    background-color: #111116;
+}
+.defintion-box {
+    width:100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    max-height: 170px;
+    scrollbar-color: #ccc #f2f2f2;
+}
+
+.defintion-box::-webkit-scrollbar {
+    width: 3px;
+}
+
+.defintion-box::-webkit-scrollbar-track {
+    background: #9399a2;
+    border-radius: 3px;
+}
+
+.defintion-box::-webkit-scrollbar-thumb {
+    background-color: #f2f2f2;
+    border-radius: 3px;
+}
+.definition-item {
+    background: #1b1b1f6e;
+    padding: 5px;
+    border-radius: 5px;
 }
 </style>

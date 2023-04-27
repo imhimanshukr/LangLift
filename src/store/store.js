@@ -8,14 +8,22 @@ export default new Vuex.Store({
   state: {
     drawer: null,
     languageList: null,
-    meaning: "",
+    result: "",
+    meaning:"",
+    wordAudio:"",
   },
   mutations: {
     setLanguageList(state, language){
       state.languageList = language
     },
-    setTranslatedMeaning(state, meaning){
+    setTranslatedResult(state, result){
+      state.result = result
+    },
+    setWordMeaning(state, meaning){
       state.meaning = meaning
+    },
+    setWordAudio(state, audio){
+      state.wordAudio = audio
     }
   },
   actions: {
@@ -29,13 +37,38 @@ export default new Vuex.Store({
     async translateWord({ commit }, text) {
       const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${text.sourceLang}&tl=${text.targetLang}&dt=t&q=${encodeURI(text.sourceText)}`)
       console.log("wordd: ", response.data);
-      let translatedMeaning = response.data[0]?.reduce((acc, curr) => {
+      let translatedResult = response.data[0]?.reduce((acc, curr) => {
         if (curr[0]) {
           acc += curr[0];
         }
         return acc;
       }, "");
-      commit("setTranslatedMeaning", translatedMeaning)
+      commit("setTranslatedResult", translatedResult)
+    },
+    async getWordMeaning({commit}, word){
+      const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+      console.log("word: ", response.data);
+      if(!response.title){
+        let uniquePartsOfSpeech = [...new Set(response.data[0].meanings.map(item => item.partOfSpeech))];
+        uniquePartsOfSpeech = uniquePartsOfSpeech.map(pos => ({
+          partOfSpeech: pos,
+          definitions: response.data[0].meanings.filter(item => item.partOfSpeech === pos).flatMap(item => item.definitions),
+          synonyms: response.data[0].meanings.filter(item => item.partOfSpeech === pos).flatMap(item => item.synonyms),
+          antonyms: response.data[0].meanings.filter(item => item.partOfSpeech === pos).flatMap(item => item.antonyms),
+      }));
+        console.log("uniquePartsOfSpeech: ", uniquePartsOfSpeech);
+        for(let i=0; i<response.data.length; i++){
+          for(let j=0; j<response.data[i].phonetics.length; j++){
+            if(response.data[i].phonetics[j].audio){
+              commit("setWordAudio", response.data[i].phonetics[j].audio);
+              break;
+            }
+          }
+          break;
+        }
+        
+        commit("setWordMeaning", uniquePartsOfSpeech);
+      }
     }
   },
 })
