@@ -1,4 +1,4 @@
-# definitionary : <a href="https://definitionary.netlify.app">Demo</a>
+# LangLift : <a href="https://LangLift.netlify.app">Demo</a>
 
 ## Project setup
 ```

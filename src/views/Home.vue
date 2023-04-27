@@ -55,12 +55,13 @@
             </v-col>
         </v-row>
         <v-card class="pa-4 my-4 rounded-xl" color="#1B1B1F" v-if="$store.state.meaning.length > 0 && targetText && sourceText">
-            <div class="d-flex justify-space-between align-baseline">
+            <div class="d-flex justify-space-between align-center">
                 <v-tabs
                 v-model="currentItem"
         dark
         center-active
         background-color="transparent"
+        style=""
       >
         <v-tab
           v-for="item in $store.state.meaning"
@@ -73,7 +74,7 @@
     </v-tab>
 </v-tabs>
     <v-icon class="pa-3 fs-16 ml-2 rounded-xl pointer" :class="isDefinitionPlay ? 'skyblue-bg' : 'primary-bg'"
-    @click="playDefinition()" v-if="$store.state.wordAudio">mdi-microphone</v-icon>
+    @click="playDefinition()" v-if="$store.state.wordAudio">mdi-volume-high</v-icon>
     <audio ref="audioElement" :src="$store.state.wordAudio" @ended="onAudioEnded"></audio>
 </div>
       <v-tabs-items dark v-model="currentItem" class="mt-4">
@@ -133,9 +134,10 @@ export default{
     },
     mounted() {
         this.getLanguageList();
-        const favorite = JSON.parse(localStorage.getItem("setFavLangComboList"));
-        if (favorite) {
-            this.favorite = favorite;
+        this.$store.state.userName = sessionStorage.getItem("currentLangLiftUser");
+        const userData = JSON.parse(localStorage.getItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`));
+        if (userData?.favorite.length > 0) {
+            this.favorite = userData.favorite;
             this.sourceLang = {
                 name: this.favorite[0].from.name,
                 sign: this.favorite[0].from.sign
@@ -190,7 +192,7 @@ export default{
                 this.favoriteActive = false;
             }
             this.checkFavorite()
-            localStorage.setItem("setFavLangComboList", JSON.stringify(this.favorite));
+            this.updateLocalStorage();
         },
         selectFavorite(selectedCombo) {
             const { from, to } = selectedCombo;
@@ -249,7 +251,7 @@ export default{
             }
         },
         playMeaning() {
-            if(this.$store.state.result){
+            if(this.$store.state.result.length > 0){
                 this.activeSpeaker = true;
                     const utterance = new SpeechSynthesisUtterance(this.$store.state.result);
                     utterance.lang = "hi-IND";
@@ -260,7 +262,7 @@ export default{
             }
         },
         copyText(){
-            if(this.$store.state.result){
+            if(this.$store.state.result.length > 0){
                 navigator.clipboard.writeText(this.$store.state.result)
                 this.isCopied = true;
                 setTimeout(() => {
@@ -279,9 +281,15 @@ export default{
             this.activeMic = false;
             this.activeSpeaker = false;
             this.sourceText = "";
+            this.$store.state.meaning = [];
             this.checkFavorite();
+        },
+        updateLocalStorage(){
+            const userData = JSON.parse(localStorage.getItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`));
+            userData.favorite = this.favorite;
+            localStorage.setItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
+            console.log("userData: ", userData);
         }
-
     },
     watch: {
         sourceText(sourceText) {
@@ -289,7 +297,7 @@ export default{
                 this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: this.targetLang.sign || this.targetLang, sourceText })
                 this.targetText = this.$store.state.result;
             } else {
-                this.$store.state.result = "";
+                this.$store.state.result = [];
             }
             if(this.sourceLang.sign === "en"){
                 this.getWordMeaning(sourceText)
@@ -299,15 +307,17 @@ export default{
             if (targetLang && this.sourceLang && this.sourceText) {
                 this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: targetLang.sign || targetLang, sourceText: this.sourceText })
             } else {
-                this.$store.state.result = "";
+                this.$store.state.result = [];
             }
         },
     },
     computed:{
         targetText(){
-            this.getWordMeaning(this.$store.state.result)
+            if(this.$store.state?.result){
+                this.getWordMeaning(this.$store.state.result)
+            }
             return this.$store.state.result
-        }
+        },
     },
     components: {
         Speech,
@@ -363,7 +373,7 @@ export default{
     display: none !important;
 }
 ::v-deep .favorites.v-tabs {
-    max-width: calc(100vw - 120px);
+    max-width: calc(100vw - 130px);
 }
 .active-result-tab{
     background-color: #111116;

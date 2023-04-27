@@ -1,8 +1,16 @@
 
 <template>
-  <v-container>
-    <v-app-bar app class="navbar primary-bg" height="89px">
+  <v-app-bar app class="navbar primary-bg" height="89px">
+      <v-container class="d-flex align-center">
       <v-row>
+      <v-col cols="2">
+        <v-avatar
+      color="#1B1B1F"
+      size="45"
+    >
+      <span class="white--text text-h5">{{ getAvatarText }}</span>
+    </v-avatar>
+      </v-col>
       <v-col
           cols="10"
           sm="6"
@@ -41,6 +49,7 @@
           :to="item.to"
           active-class="active-link"
           class="nav-link"
+          @click="navigate(item.title)"
         >
           <v-list-item-icon class="mr-0">
             <v-icon color="#ffffffa8">{{ item.icon }}</v-icon>
@@ -52,21 +61,51 @@
         </v-list-item>
       </v-list>
     </v-menu>
-    
-    
+  </v-container>
   </v-app-bar>
-</v-container>
 </template>
 <script>
 export default {
     name: "NavBar",
   data: () => ({
     items: [
-          { title: 'Home', icon: 'mdi-home-outline', to:"/" },
+          { title: 'Home', icon: 'mdi-home-outline', to:"/home" },
           { title: 'History', icon: 'mdi-history', to:"history" },
           { title: 'Bookmarks', icon: 'mdi-bookmark-check-outline', to:"bookmarks" },
+          { title: 'Logout', icon: 'mdi-logout', to:"/" },
         ],
   }),
+  mounted(){
+    this.updateLocalStorage();
+  },
+  methods:{
+    navigate(text){
+  if(text === "Logout"){
+    const userData = JSON.parse(localStorage.getItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`));
+    userData.loggedIn = false;
+    localStorage.setItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
+    sessionStorage.removeItem("currentLangLiftUser");
+    this.$router.replace("/");
+  }
+},
+    updateLocalStorage(){
+            this.$store.state.userName = sessionStorage.getItem("currentLangLiftUser");
+            const userData = localStorage.getItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`);
+            console.log("userData: ", userData);
+        }
+},
+computed:{
+  getAvatarText() {
+            let names = this.$store.state.userName.split(" ");
+            let text = "";
+            if (names.length > 1) {
+                text = names[0][0] + names[names.length - 1][0];
+            } else {
+                text = names[0].slice(0, 1);
+            }
+            return text.toUpperCase();
+        }
+}
 }
 </script>
 <style scoped>
@@ -92,5 +131,7 @@ export default {
 .theme--light.v-list-item--active:hover::before, .theme--light.v-list-item--active::before {
     opacity: 0;
 }
-
+.theme--light.v-btn:focus::before {
+    opacity: 0;
+}
 </style>

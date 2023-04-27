@@ -6,10 +6,10 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    drawer: null,
+    userName: "",
     languageList: null,
-    result: "",
-    meaning:"",
+    result: null,
+    meaning:[],
     wordAudio:"",
   },
   mutations: {
@@ -48,7 +48,7 @@ export default new Vuex.Store({
     async getWordMeaning({commit}, word){
       const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
       console.log("word: ", response.data);
-      if(!response.title){
+      if(!response.title && response){
         let uniquePartsOfSpeech = [...new Set(response.data[0].meanings.map(item => item.partOfSpeech))];
         uniquePartsOfSpeech = uniquePartsOfSpeech.map(pos => ({
           partOfSpeech: pos,
@@ -68,6 +68,8 @@ export default new Vuex.Store({
         }
         
         commit("setWordMeaning", uniquePartsOfSpeech);
+      } else {
+        commit("setWordMeaning", []);
       }
     }
   },
