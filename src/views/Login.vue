@@ -49,7 +49,7 @@ export default {
                     localStorage.setItem(`${this.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
                     sessionStorage.setItem("currentLangLiftUser", this.userName);
                     this.$store.state.userName = this.userName;
-                    this.$router.push("/home")
+                    this.$router.push("/")
                 } else {
                     userData = {
                         userName: this.userName,
@@ -61,7 +61,7 @@ export default {
                     sessionStorage.setItem("currentLangLiftUser", this.userName);
                     this.$store.state.userName = this.userName;
                     localStorage.setItem(`${this.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
-                    this.$router.push("/home")
+                    this.$router.push("/")
                 }
             }
         },

@@ -2,13 +2,13 @@
 <template>
   <v-app-bar app class="navbar primary-bg" height="89px">
       <v-container class="d-flex align-center">
-      <v-row>
-      <v-col cols="2">
+      <v-row class="d-flex align-center">
+      <v-col cols="2" sm="1">
         <v-avatar
       color="#1B1B1F"
       size="45"
     >
-      <span class="white--text text-h5">{{ getAvatarText }}</span>
+      <span class="white--text text-h5" style="font-size: 18px !important;">{{ getAvatarText }}</span>
     </v-avatar>
       </v-col>
       <v-col
@@ -48,7 +48,7 @@
           link
           :to="item.to"
           active-class="active-link"
-          class="nav-link"
+          :class="item.title === 'Delete account' ? 'del-link' : 'nav-link'"
           @click="navigate(item.title)"
         >
           <v-list-item-icon class="mr-0">
@@ -69,10 +69,11 @@ export default {
     name: "NavBar",
   data: () => ({
     items: [
-          { title: 'Home', icon: 'mdi-home-outline', to:"/home" },
+          { title: 'Home', icon: 'mdi-home-outline', to:"/" },
           { title: 'History', icon: 'mdi-history', to:"history" },
           { title: 'Bookmarks', icon: 'mdi-bookmark-check-outline', to:"bookmarks" },
-          { title: 'Logout', icon: 'mdi-logout', to:"/" },
+          { title: 'Logout', icon: 'mdi-logout', to:"/login" },
+          { title: 'Delete account', icon: 'mdi-delete', to:"/login" },
         ],
   }),
   mounted(){
@@ -85,13 +86,16 @@ export default {
     userData.loggedIn = false;
     localStorage.setItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
     sessionStorage.removeItem("currentLangLiftUser");
-    this.$router.replace("/");
+    this.$router.replace("/login");
+  }
+  if(text === "Delete account"){
+    localStorage.removeItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`);
+    sessionStorage.removeItem("currentLangLiftUser");
+    this.$router.replace("/login");
   }
 },
     updateLocalStorage(){
             this.$store.state.userName = sessionStorage.getItem("currentLangLiftUser");
-            const userData = localStorage.getItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`);
-            console.log("userData: ", userData);
         }
 },
 computed:{
@@ -125,7 +129,11 @@ computed:{
     background: #346AFF;
     border-radius: 30px;
 }
-.active-link .v-icon, .active-link .primary-text, .nav-link:hover .v-icon, .nav-link:hover .primary-text {
+.del-link:hover {
+  background: red;
+  border-radius: 30px;
+}
+.active-link .v-icon, .active-link .primary-text, .nav-link:hover .v-icon, .nav-link:hover .primary-text, .del-link:hover .v-icon, .del-link:hover .primary-text {
     color: white !important;
 }
 .theme--light.v-list-item--active:hover::before, .theme--light.v-list-item--active::before {

@@ -1,5 +1,5 @@
 <template>
-  <v-app id="inspire">
+  <v-app id="inspire" class="main-container">
     <Navbar v-if="isLoggedIn"/>
     <v-main class="primary-bg" :class="isLoggedIn ? 'pt-16' : ''">
       <v-container :class="{'pa-0' : !isLoggedIn}">
@@ -20,13 +20,19 @@ export default {
   computed:{
 		isLoggedIn(){
       const currentUser = sessionStorage.getItem("currentLangLiftUser");
-			if (!currentUser && this.$route.path !== '/') {
+			if (!currentUser && this.$route.path !== '/login') {
+			this.$router.replace("/login")
+			} else if (currentUser && this.$route.path === '/login') {
 			this.$router.replace("/")
-			} else if (currentUser && this.$route.path === '/') {
-			this.$router.replace("/home")
 			}
 			return currentUser;
 		}
 }
 };
 </script>
+
+<style scoped>
+.main-container {
+  font-family: 'Roboto', sans-serif !important;
+}
+</style>

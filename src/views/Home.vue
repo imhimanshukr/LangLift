@@ -39,7 +39,7 @@
                             @change="getTargetLang"></v-autocomplete>
                     </div>
                     <v-textarea rows="4" filled hide-details color="#1B1B1F" dark rounded auto-grow
-                        class="no-focus-outline mt-4" v-model="targetText" placeholder="Translation"></v-textarea>
+                        class="no-focus-outline mt-4" v-model="$store.state.result" placeholder="Translation"></v-textarea>
                     <div class="d-flex justify-end align-center mt-4">
                         <div class="d-flex">
                             <div @click="playMeaning()">
@@ -54,7 +54,7 @@
                 </div>
             </v-col>
         </v-row>
-        <v-card class="pa-4 my-4 rounded-xl" color="#1B1B1F" v-if="$store.state.meaning.length > 0 && targetText && sourceText">
+        <v-card class="pa-4 my-4 rounded-xl" color="#1B1B1F" v-if="$store.state.meaning.length > 0 && $store.state.result && sourceText">
             <div class="d-flex justify-space-between align-center">
                 <v-tabs
                 v-model="currentItem"
@@ -111,6 +111,8 @@
 <script>
 import { mapActions } from 'vuex';
 import Speech from 'vue-speech';
+import { debounce } from 'lodash';
+
 // import { slugify } from 'transliteration'
 
 export default{
@@ -292,31 +294,24 @@ export default{
         }
     },
     watch: {
-        sourceText(sourceText) {
-            if (sourceText && this.targetLang) {
-                this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: this.targetLang.sign || this.targetLang, sourceText })
-                this.targetText = this.$store.state.result;
+        // eslint-disable-next-line no-undef
+        sourceText: debounce(function (sourceText) {
+            if (sourceText !== '' && this.targetLang) {
+            this.translateWord({
+                sourceLang: this.sourceLang.sign || this.sourceLang,
+                targetLang: this.targetLang.sign || this.targetLang,
+                sourceText
+            })
             } else {
-                this.$store.state.result = [];
+            this.$store.state.result = [];
             }
-            if(this.sourceLang.sign === "en"){
-                this.getWordMeaning(sourceText)
-            }
-        },
+        }, 2000),
         targetLang(targetLang) {
             if (targetLang && this.sourceLang && this.sourceText) {
                 this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: targetLang.sign || targetLang, sourceText: this.sourceText })
             } else {
                 this.$store.state.result = [];
             }
-        },
-    },
-    computed:{
-        targetText(){
-            if(this.$store.state?.result){
-                this.getWordMeaning(this.$store.state.result)
-            }
-            return this.$store.state.result
         },
     },
     components: {

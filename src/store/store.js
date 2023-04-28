@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Vue from 'vue'
 import Vuex from 'vuex'
+import moment from "moment";
 
 Vue.use(Vuex)
 
@@ -11,6 +12,7 @@ export default new Vuex.Store({
     result: null,
     meaning:[],
     wordAudio:"",
+    history: null,
   },
   mutations: {
     setLanguageList(state, language){
@@ -24,7 +26,46 @@ export default new Vuex.Store({
     },
     setWordAudio(state, audio){
       state.wordAudio = audio
-    }
+    },
+    setHistory(state, data) {
+      state.userName = sessionStorage.getItem("currentLangLiftUser");
+      const userData = JSON.parse(localStorage.getItem(`${state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`));
+      let history = userData.history;
+      const today = moment().format("dddd, MMMM DD, YYYY");
+      const now = moment().format("hh:mm:ss A");
+      const newTranslation = {
+        id: new Date().getTime().toString(),
+        selected: false,
+        time: now,
+        translation: {
+          sourceText: data.sourceText,
+          targetText: data.targetText
+        }
+      };
+      if (history.length === 0) {
+        history.unshift({
+          historyDateTime: today,
+          historyData: [newTranslation]
+        });
+      } else {
+        let found = false;
+        history.forEach((item) => {
+          if (item.historyDateTime === today) {
+            item.historyData.unshift(newTranslation);
+            found = true;
+          }
+        });
+        if (!found) {
+          history.unshift({
+            historyDateTime: today,
+            historyData: [newTranslation]
+          });
+        }
+      }
+      userData.history = history;
+      localStorage.setItem(`${state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
+      state.history = userData.history;
+    },
   },
   actions: {
     async getLanguageList({commit}){
@@ -33,8 +74,8 @@ export default new Vuex.Store({
       const names = languages.map(language => ({name: language.name, sign: language["639-1"]}));
       console.log("names: ", names);
       commit("setLanguageList", names)
-    },    
-    async translateWord({ commit }, text) {
+    },
+    async translateWord({ commit, dispatch  }, text) {
       const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${text.sourceLang}&tl=${text.targetLang}&dt=t&q=${encodeURI(text.sourceText)}`)
       console.log("wordd: ", response.data);
       let translatedResult = response.data[0]?.reduce((acc, curr) => {
@@ -43,9 +84,18 @@ export default new Vuex.Store({
         }
         return acc;
       }, "");
-      commit("setTranslatedResult", translatedResult)
+      if(translatedResult && text.sourceText){
+        commit("setTranslatedResult", translatedResult)
+        if(text.sourceLang === 'en'){
+          dispatch("getWordMeaning", text.sourceText);
+        } else if(text.targetLang === 'en'){
+          dispatch("getWordMeaning", translatedResult);
+        }
+        commit("setHistory", {sourceText: text.sourceText, targetText: translatedResult})
+      }
     },
     async getWordMeaning({commit}, word){
+      commit("setWordMeaning", []);
       const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
       console.log("word: ", response.data);
       if(!response.title && response){
@@ -66,10 +116,7 @@ export default new Vuex.Store({
           }
           break;
         }
-        
         commit("setWordMeaning", uniquePartsOfSpeech);
-      } else {
-        commit("setWordMeaning", []);
       }
     }
   },
