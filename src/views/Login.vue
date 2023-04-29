@@ -24,7 +24,7 @@
                     :rules="[rules.required, rules.min]"
                     hint="At least 3 characters"
           ></v-text-field>
-                <v-btn rounded class="fs-10" style="width:230px; background-color: rgba(255, 255, 255, 0.08);color: grey;" @click="getStarted">Get started</v-btn>
+                <v-btn rounded class="fs-10 px-15" style="background-color: rgba(255, 255, 255, 0.08);color: grey;" @click="getStarted">Get started</v-btn>
             </div>
         </v-col>
     </v-row>
@@ -37,7 +37,7 @@ export default {
         userName: "",
         rules: {
           required: value => !!value || 'Please enter name.',
-          min: v => v.length >= 3 || 'Min 3 characters',
+          min: v => v.trim().length >= 3 || 'Min 3 characters',
         }
     }),
     methods:{

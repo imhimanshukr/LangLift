@@ -62,6 +62,22 @@
       </v-list>
     </v-menu>
   </v-container>
+  <v-dialog v-model="showDialog" dark max-width="290">
+			<v-card color="#323232" elevation="24">
+				<v-card-title class="text-h6">
+					Are you sure you want to delete account?
+				</v-card-title>
+				<v-card-actions>
+					<v-spacer></v-spacer>
+					<v-btn color="blue darken-1" text @click="showDialog = false;">
+						Cancel
+					</v-btn>
+					<v-btn color="red darken-1" text @click="onDeleteAccound()">
+						Delete
+					</v-btn>
+				</v-card-actions>
+			</v-card>
+		</v-dialog>
   </v-app-bar>
 </template>
 <script>
@@ -75,6 +91,7 @@ export default {
           { title: 'Logout', icon: 'mdi-logout', to:"/login" },
           { title: 'Delete account', icon: 'mdi-delete', to:"/login" },
         ],
+        showDialog: false,
   }),
   mounted(){
     this.updateLocalStorage();
@@ -89,10 +106,13 @@ export default {
     this.$router.replace("/login");
   }
   if(text === "Delete account"){
-    localStorage.removeItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`);
+    this.showDialog = true;
+  }
+},
+onDeleteAccound(){
+  localStorage.removeItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`);
     sessionStorage.removeItem("currentLangLiftUser");
     this.$router.replace("/login");
-  }
 },
     updateLocalStorage(){
             this.$store.state.userName = sessionStorage.getItem("currentLangLiftUser");
@@ -102,10 +122,10 @@ computed:{
   getAvatarText() {
             let names = this.$store.state.userName.split(" ");
             let text = "";
-            if (names.length > 1) {
-                text = names[0][0] + names[names.length - 1][0];
+            if (names.length === 1) {
+              text = names[0].slice(0, 1);
             } else {
-                text = names[0].slice(0, 1);
+              text = names[0][0] + names[1][0];
             }
             return text.toUpperCase();
         }

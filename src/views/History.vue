@@ -3,9 +3,10 @@
 		<div class="d-flex justify-space-between align-center mb-3">
 			<h3 class="white--text">Your History</h3>
 			<v-btn class="text-capitalize white--text" color="#616161" @click="clearSelectedHistory()"
-				v-if="selectedIds.length > 0">Delete</v-btn>
+				v-if="selectedIds.length > 0 && deleteOption === 4">Delete</v-btn>
 			<v-btn class="text-capitalize white--text" color="#616161" @click="clearAllHistory()" v-else>Clear all</v-btn>
 		</div>
+		<p class="mb-0 pb-1 show-on-mobile"><i style="color: #a3a3a3;">Click on translation to search</i></p>
 		<div class="history">
 			<v-sheet color="#1B1B1F" class="rounded-lg mb-4" v-for="(history, index) in userHistory" :key="index">
 				<div class="d-flex justify-space-between align-center pa-4">
@@ -19,10 +20,9 @@
 							<td class="select-column"><v-checkbox v-model="item.selected"
 									@change="selectHistory($event, item.id)"></v-checkbox></td>
 							<td class="time-column">{{ item.time }}</td>
-							<td class="translation-column text-capitalize">{{ item.translation.sourceText + " - " +
-								item.translation.targetText }}</td>
+							<td class="translation-column text-capitalize"><span class="pointer translation" @click="getTranslation(item.translation)">{{ item.translation.sourceText + " - " +item.translation.targetText }}</span></td>
 							<td class="action-column">
-								<v-menu offset-y>
+								<v-menu>
 									<template v-slot:activator="{ on }">
 										<v-icon class="mr-2" color="#fff" v-on="on">mdi-dots-vertical</v-icon>
 									</template>
@@ -40,9 +40,9 @@
 				</v-data-table>
 			</v-sheet>
 		</div>
-		<v-dialog v-model="showDeleteDialog" dark max-width="500px">
-			<v-card color="#323232">
-				<v-card-title class="headline">
+		<v-dialog v-model="showDeleteDialog" dark max-width="290">
+			<v-card color="#323232" elevation="24">
+				<v-card-title class="text-h6">
 					Are you sure you want to delete?
 				</v-card-title>
 				<v-card-actions>
@@ -53,12 +53,14 @@
 					<v-btn color="red darken-1" text @click="onFinalDelete()">
 						Delete
 					</v-btn>
+					<audio ref="audioElement" src="../assets/delete.mp3"></audio>
 				</v-card-actions>
 			</v-card>
 		</v-dialog>
 	</v-container>
 	<v-container v-else class="no-data">
-		<h1>Texts that you search appear here</h1>
+		<h1 class="text-h6 mb-2">Text you searched for appears here</h1>
+		<v-btn to="/" link dark>Home</v-btn>
 	</v-container>
 </template>  
   
@@ -144,33 +146,47 @@ export default {
 				this.userData.history.splice(this.idToDelete, 1);
 			}
 			if (this.deleteOption === 3 && this.idToDelete) {
-				this.userData.history.forEach(item => {
+				this.userData.history.forEach((item, index) => {
 				item.historyData = item.historyData.filter(data => data.id !== this.idToDelete);
+				if (item.historyData.length === 0) {
+				this.userData.history.splice(index, 1);
+				}
 				});
 			}
-			if(this.deleteOption === 4 && this.selectedIds.length > 0){
-				this.userData.history.forEach(item => {
+			if (this.deleteOption === 4 && this.selectedIds.length > 0) {
+			this.userData.history.forEach((item, index) => {
 				item.historyData = item.historyData.filter(data => !this.selectedIds.includes(data.id));
-				});
+				if (item.historyData.length === 0) {
+				this.userData.history.splice(index, 1);
+				}
+			});
 			}
-			localStorage.setItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(this.userData));
-			this.$store.state.history = this.userData.history;
 			this.showDeleteDialog = false;
 			this.idToDelete = null;
 			this.deleteOption = null;
+			localStorage.setItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(this.userData));
+			this.$store.state.history = this.userData.history;
+			this.$refs.audioElement.play();
 		},
 		cancelDelete(){
 			this.showDeleteDialog = false;
 			this.idToDelete = null;
 			this.deleteOption = null;
 			this.selectedIds = [];
+		},
+		getTranslation(translation){
+			console.log("translation: ", translation);
+			this.$router.push({
+				name: "home",
+				params:{
+					translation
+				}
+			})
 		}
 	},
 	computed: {
 		userHistory() {
-			const history = this.$store.state.history
-			console.log("his: ", history);
-			return history
+			return this.$store.state.history
 		}
 	}
 };
@@ -234,19 +250,24 @@ export default {
 	cursor: not-allowed !important;
 	color: #999999 !important;
 }
-.headline {
-	font-size: 24px !important;
-}
 .no-data {
 	height: calc(100vh - 90px);
     display: flex;
     align-items: center;
     justify-content: center;
+	flex-direction: column;
 }
 .no-data h1{
 	color: #9b9b9b;
-	font-weight: 500;
+	font-weight: 400;
 	text-align: center;
+}
+.translation:hover{
+	text-decoration: underline;
+}
+
+::v-deep .theme--dark.v-data-table > .v-data-table__wrapper > table > tbody > tr:hover:not(.v-data-table__expanded__content):not(.v-data-table__empty-wrapper) {
+    background: transparent;
 }
 </style>
   

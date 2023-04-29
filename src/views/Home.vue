@@ -38,7 +38,7 @@
                             dark item-text="name" item-value="sign" prepend-inner-icon="mdi-web" class="lang"
                             @change="getTargetLang"></v-autocomplete>
                     </div>
-                    <v-textarea rows="4" filled hide-details color="#1B1B1F" dark rounded auto-grow
+                    <v-textarea rows="4" filled hide-details color="#1B1B1F" :readonly="true" dark rounded auto-grow
                         class="no-focus-outline mt-4" v-model="$store.state.result" placeholder="Translation"></v-textarea>
                     <div class="d-flex justify-end align-center mt-4">
                         <div class="d-flex">
@@ -61,7 +61,7 @@
         dark
         center-active
         background-color="transparent"
-        style=""
+        class="meaning-result"
       >
         <v-tab
           v-for="item in $store.state.meaning"
@@ -137,9 +137,24 @@ export default{
     mounted() {
         this.getLanguageList();
         this.$store.state.userName = sessionStorage.getItem("currentLangLiftUser");
+        const translationParams = this.$route.params.translation;
         const userData = JSON.parse(localStorage.getItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`));
-        if (userData?.favorite.length > 0) {
+        if(userData){
             this.favorite = userData.favorite;
+        }
+        if(translationParams){
+            this.sourceLang = {
+                name: translationParams.sourceLang.name,
+                sign: translationParams.sourceLang.sign
+            }
+            this.targetLang = {
+                name: translationParams.targetLang.name,
+                sign: translationParams.targetLang.sign
+            };
+            this.sourceText = translationParams.sourceText;
+            console.log("this.$route.params.translation: ", this.$route.params.translation);
+            this.checkFavorite();
+        } else if (this.favorite.length > 0) {
             this.sourceLang = {
                 name: this.favorite[0].from.name,
                 sign: this.favorite[0].from.sign
@@ -248,6 +263,9 @@ export default{
                     this.sourceText += transcript;
                 };
                 this.recognition.start();
+                this.recognition.onend = () => {
+                        this.activeMic = false;
+                    }
             } else {
                 this.recognition.stop();
             }
@@ -297,18 +315,20 @@ export default{
         // eslint-disable-next-line no-undef
         sourceText: debounce(function (sourceText) {
             if (sourceText !== '' && this.targetLang) {
+                console.log("this.sourceLang: ", this.sourceLang);
+                console.log("this.targetLang: ", this.targetLang);
             this.translateWord({
-                sourceLang: this.sourceLang.sign || this.sourceLang,
-                targetLang: this.targetLang.sign || this.targetLang,
+                sourceLang: this.sourceLang,
+                targetLang: this.targetLang,
                 sourceText
             })
             } else {
             this.$store.state.result = [];
             }
-        }, 2000),
+        }, 1000),
         targetLang(targetLang) {
             if (targetLang && this.sourceLang && this.sourceText) {
-                this.translateWord({ sourceLang: this.sourceLang.sign || this.sourceLang, targetLang: targetLang.sign || targetLang, sourceText: this.sourceText })
+                this.translateWord({ sourceLang: this.sourceLang, targetLang: targetLang, sourceText: this.sourceText })
             } else {
                 this.$store.state.result = [];
             }
@@ -370,6 +390,9 @@ export default{
 ::v-deep .favorites.v-tabs {
     max-width: calc(100vw - 130px);
 }
+::v-deep .meaning-result.v-tabs {
+    max-width: calc(100vw - 120px);
+}
 .active-result-tab{
     background-color: #111116;
 }
@@ -399,5 +422,8 @@ export default{
     background: #1b1b1f6e;
     padding: 5px;
     border-radius: 5px;
+}
+::v-deep .theme--dark.v-tabs .v-tab:hover::before {
+    opacity: 0;
 }
 </style>

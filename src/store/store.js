@@ -12,7 +12,7 @@ export default new Vuex.Store({
     result: null,
     meaning:[],
     wordAudio:"",
-    history: null,
+    history: [],
   },
   mutations: {
     setLanguageList(state, language){
@@ -39,7 +39,9 @@ export default new Vuex.Store({
         time: now,
         translation: {
           sourceText: data.sourceText,
-          targetText: data.targetText
+          sourceLang: data.sourceLang,
+          targetText: data.targetText,
+          targetLang: data.targetLang
         }
       };
       if (history.length === 0) {
@@ -76,7 +78,7 @@ export default new Vuex.Store({
       commit("setLanguageList", names)
     },
     async translateWord({ commit, dispatch  }, text) {
-      const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${text.sourceLang}&tl=${text.targetLang}&dt=t&q=${encodeURI(text.sourceText)}`)
+      const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${text.sourceLang.sign}&tl=${text.targetLang.sign}&dt=t&q=${encodeURI(text.sourceText)}`)
       console.log("wordd: ", response.data);
       let translatedResult = response.data[0]?.reduce((acc, curr) => {
         if (curr[0]) {
@@ -86,12 +88,15 @@ export default new Vuex.Store({
       }, "");
       if(translatedResult && text.sourceText){
         commit("setTranslatedResult", translatedResult)
-        if(text.sourceLang === 'en'){
-          dispatch("getWordMeaning", text.sourceText);
-        } else if(text.targetLang === 'en'){
+        if(text.targetLang.sign === 'en'){
           dispatch("getWordMeaning", translatedResult);
+        } 
+        if(text.sourceLang.sign === 'en'){
+          dispatch("getWordMeaning", text.sourceText);
         }
-        commit("setHistory", {sourceText: text.sourceText, targetText: translatedResult})
+        if(text.sourceLang.sign !== text.targetLang.sign){
+          commit("setHistory", {sourceText: text.sourceText, sourceLang: text.sourceLang, targetText: translatedResult, targetLang: text.targetLang})
+        }
       }
     },
     async getWordMeaning({commit}, word){
