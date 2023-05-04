@@ -16,6 +16,7 @@
     "vue": "^2.6.14",
     "vue-router": "^3.5.1",
     "vue-speech": "^0.1.0",
+    "vue-toastification": "^1.7.14",
     "vuetify": "^2.6.0",
     "vuex": "^3.6.2"
   },

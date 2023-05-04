@@ -11,7 +11,7 @@
 			<v-sheet color="#1B1B1F" class="rounded-lg mb-4" v-for="(history, index) in userHistory" :key="index">
 				<div class="d-flex justify-space-between align-center pa-4">
 					<p class="white--text mb-0">{{ getDateTime(history.historyDateTime) }}</p>
-					<v-icon class="pointer" color="#c3c3c3" @click="deleteHistoryByDay(index)" :class="{'disable' : deleteOption === 4}">mdi-delete</v-icon>
+					<v-icon class="pointer" color="#c3c3c3" @click="deleteHistoryByDay(index)" :class="{'disable' : deleteOption === 4 && selectedIds.length > 0}">mdi-delete</v-icon>
 				</div>
 				<v-data-table :headers="headers" :items="history.historyData" dark fixed-header
 					:items-per-page="history.historyData.length" hide-default-footer height="300px">
@@ -167,6 +167,7 @@ export default {
 			localStorage.setItem(`${this.$store.state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(this.userData));
 			this.$store.state.history = this.userData.history;
 			this.$refs.audioElement.play();
+			this.$toast.success("Deleted Successfully!", {timeout: 2000});
 		},
 		cancelDelete(){
 			this.showDeleteDialog = false;
@@ -177,7 +178,7 @@ export default {
 		getTranslation(translation){
 			console.log("translation: ", translation);
 			this.$router.push({
-				name: "home",
+				name: "HomePage",
 				params:{
 					translation
 				}

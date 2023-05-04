@@ -13,6 +13,7 @@ export default new Vuex.Store({
     meaning:[],
     wordAudio:"",
     history: [],
+    bookmarks:[],
   },
   mutations: {
     setLanguageList(state, language){
@@ -68,18 +69,33 @@ export default new Vuex.Store({
       localStorage.setItem(`${state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
       state.history = userData.history;
     },
+    setBookmark(state, bookmark){
+      state.userName = sessionStorage.getItem("currentLangLiftUser");
+      const userData = JSON.parse(localStorage.getItem(`${state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`));
+      const newBookmark = {
+        id: new Date().getTime().toString(),
+        data: moment().format("dddd, MMMM DD, YYYY"),
+        audio: state.wordAudio,
+        sourceText: bookmark.sourceText,
+        targetText: bookmark.targetText,
+        sourceLang: bookmark.sourceLang,
+        targetLang: bookmark.targetLang,
+        meaning: bookmark.meaning
+      }
+      userData.bookmarks.push(newBookmark);
+      localStorage.setItem(`${state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
+      state.bookmarks = userData.bookmarks;
+    }
   },
   actions: {
     async getLanguageList({commit}){
       const response = await axios.get("https://raw.githubusercontent.com/haliaeetus/iso-639/master/data/iso_639-1.json");
       const languages = Object.values(response.data);
       const names = languages.map(language => ({name: language.name, sign: language["639-1"]}));
-      console.log("names: ", names);
       commit("setLanguageList", names)
     },
     async translateWord({ commit, dispatch  }, text) {
       const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${text.sourceLang.sign}&tl=${text.targetLang.sign}&dt=t&q=${encodeURI(text.sourceText)}`)
-      console.log("wordd: ", response.data);
       let translatedResult = response.data[0]?.reduce((acc, curr) => {
         if (curr[0]) {
           acc += curr[0];
@@ -102,7 +118,6 @@ export default new Vuex.Store({
     async getWordMeaning({commit}, word){
       commit("setWordMeaning", []);
       const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-      console.log("word: ", response.data);
       if(!response.title && response){
         let uniquePartsOfSpeech = [...new Set(response.data[0].meanings.map(item => item.partOfSpeech))];
         uniquePartsOfSpeech = uniquePartsOfSpeech.map(pos => ({
@@ -111,7 +126,6 @@ export default new Vuex.Store({
           synonyms: response.data[0].meanings.filter(item => item.partOfSpeech === pos).flatMap(item => item.synonyms),
           antonyms: response.data[0].meanings.filter(item => item.partOfSpeech === pos).flatMap(item => item.antonyms),
       }));
-        console.log("uniquePartsOfSpeech: ", uniquePartsOfSpeech);
         for(let i=0; i<response.data.length; i++){
           for(let j=0; j<response.data[i].phonetics.length; j++){
             if(response.data[i].phonetics[j].audio){
@@ -123,6 +137,12 @@ export default new Vuex.Store({
         }
         commit("setWordMeaning", uniquePartsOfSpeech);
       }
-    }
+    },
+    async setBookmarkData({commit}, bookmarkData){
+      commit("setBookmark", bookmarkData)
+    }    
+  },
+  async getWordOfTheDay(data){
+    console.log("book: ", data);
   },
 })

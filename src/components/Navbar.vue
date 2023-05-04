@@ -15,7 +15,7 @@
           cols="10"
           sm="6"
         >
-          <v-text-field
+          <!-- <v-text-field
             filled
             rounded
             dark
@@ -23,7 +23,7 @@
             dense
             append-icon="mdi-magnify"
             placeholder="Search history, bookmarks"
-          ></v-text-field>
+          ></v-text-field> -->
         </v-col>
       </v-row>
       <v-menu
@@ -87,7 +87,7 @@ export default {
     items: [
           { title: 'Home', icon: 'mdi-home-outline', to:"/" },
           { title: 'History', icon: 'mdi-history', to:"history" },
-          { title: 'Bookmarks', icon: 'mdi-bookmark-check-outline', to:"bookmarks" },
+          { title: 'Bookmarks', icon: 'mdi-bookmark-check-outline', to:"/bookmarks" },
           { title: 'Logout', icon: 'mdi-logout', to:"/login" },
           { title: 'Delete account', icon: 'mdi-delete', to:"/login" },
         ],

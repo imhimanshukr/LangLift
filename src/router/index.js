@@ -3,24 +3,30 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import History from '../views/History.vue'
+import Bookmarks from '../views/Bookmark.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/login',
-    name: 'login',
+    name: 'LoginPage',
     component: Login
   },
   {
     path: '/',
-    name: 'home',
+    name: 'HomePage',
     component: Home
   },
   {
     path: '/history',
-    name: 'history',
+    name: 'HistoryPage',
     component: History
+  },
+  {
+    path: '/bookmarks',
+    name: 'BookMarks',
+    component: Bookmarks
   },
 ]
 
