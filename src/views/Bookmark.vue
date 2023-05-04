@@ -79,7 +79,7 @@
   </v-container>
   <v-container v-else class="no-data">
     <h1 class="text-h6 mb-2">No bookmark available</h1>
-    <v-btn to="/" link dark>Home</v-btn>
+    <v-btn to="/home" link dark>Home</v-btn>
   </v-container>
 </template>
 
@@ -91,7 +91,6 @@ export default {
       bookmarks: [],
       currentItem: {},
       languageFilter: "All",
-      languageOptions: ["All"],
       audio: null,
       audioPlayer: null,
       showDeleteDialog: false,
@@ -124,6 +123,16 @@ export default {
         return this.$store.state.bookmarks;
       }
     },
+    languageOptions(){
+      const lang = new Set(
+      this.$store.state.bookmarks.map(
+        (item) => `${item.sourceLang.name} - ${item.targetLang.name}`
+      )
+    );
+    const language = ["All"];
+    language.push(...lang);
+      return language;
+    }
   },
   methods: {
     playDefinition(audio) {

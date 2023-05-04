@@ -85,11 +85,11 @@ export default {
     name: "NavBar",
   data: () => ({
     items: [
-          { title: 'Home', icon: 'mdi-home-outline', to:"/" },
+          { title: 'Home', icon: 'mdi-home-outline', to:"/home" },
           { title: 'History', icon: 'mdi-history', to:"history" },
           { title: 'Bookmarks', icon: 'mdi-bookmark-check-outline', to:"/bookmarks" },
-          { title: 'Logout', icon: 'mdi-logout', to:"/login" },
-          { title: 'Delete account', icon: 'mdi-delete', to:"/login" },
+          { title: 'Logout', icon: 'mdi-logout', to:"/" },
+          { title: 'Delete account', icon: 'mdi-delete', to:"/" },
         ],
         showDialog: false,
   }),

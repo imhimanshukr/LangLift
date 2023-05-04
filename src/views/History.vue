@@ -60,7 +60,7 @@
 	</v-container>
 	<v-container v-else class="no-data">
 		<h1 class="text-h6 mb-2">Text you searched for appears here</h1>
-		<v-btn to="/" link dark>Home</v-btn>
+		<v-btn to="/home" link dark>Home</v-btn>
 	</v-container>
 </template>  
   

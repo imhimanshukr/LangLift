@@ -20,10 +20,10 @@ export default {
   computed:{
 		isLoggedIn(){
       const currentUser = sessionStorage.getItem("currentLangLiftUser");
-			if (!currentUser && this.$route.path !== '/login') {
-			this.$router.replace("/login")
-			} else if (currentUser && this.$route.path === '/login') {
+			if (!currentUser && this.$route.path !== '/') {
 			this.$router.replace("/")
+			} else if (currentUser && this.$route.path === '/') {
+			this.$router.replace("/home")
 			}
 			return currentUser;
 		}
