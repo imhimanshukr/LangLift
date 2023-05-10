@@ -1,5 +1,17 @@
 <template>
   <v-container fluid>
+    <div class="d-flex align-center mt-4">
+      <h3 class="fs-14 mr-3 text-no-wrap white--text">WOTD : </h3>
+      <i class="text-capitalize text-decoration-underline pointer white--text fs-14" @click="sourceText = $store.state.wordOfTheDay.word"> {{ $store.state.wordOfTheDay ? $store.state.wordOfTheDay.word : '' }}</i>
+      <div>
+        <v-icon class="ml-2 pointer" @click="showWotd()">mdi-information-slab-circle</v-icon>
+        <v-tooltip
+        v-model="show"
+        >
+        <p style="white-space: break-spaces;">{{ $store.state.wordOfTheDay ? $store.state.wordOfTheDay.definitions[0].text : '' }}</p>
+      </v-tooltip>
+    </div>
+    </div>
     <div class="mt-4 d-flex align-center" v-if="favorite.length > 0">
       <h3 class="fs-14 mr-3 text-no-wrap white--text">Your Favorites</h3>
       <v-tabs background-color="transparent" center-active class="favorites">
@@ -244,6 +256,7 @@ export default {
       showMore: false,
       isDefinitionPlay: false,
       isBookmarked: false,
+      show: false,
     };
   },
   mounted() {
@@ -296,8 +309,8 @@ export default {
       "getLanguageList",
       "translateWord",
       "getWordMeaning",
-      "getWordOfTheDay",
       "setBookmarkData",
+      "getWordOfTheDay"
     ]),
     swapLanguage() {
       const targetLang = this.targetLang;
@@ -335,6 +348,12 @@ export default {
       }
       this.checkFavorite();
       this.updateLocalStorage();
+    },
+    showWotd(){
+      this.show = true;
+      setTimeout(() =>{
+        this.show = false;
+      }, 4000)
     },
     selectFavorite(selectedCombo) {
       const { from, to } = selectedCombo;

@@ -14,6 +14,7 @@ export default new Vuex.Store({
     wordAudio:"",
     history: [],
     bookmarks:[],
+    wordOfTheDay: null,
   },
   mutations: {
     setLanguageList(state, language){
@@ -85,6 +86,9 @@ export default new Vuex.Store({
       userData.bookmarks.push(newBookmark);
       localStorage.setItem(`${state.userName.replace(/\s+/g, '')}-LangLiftLoggedIn`, JSON.stringify(userData));
       state.bookmarks = userData.bookmarks;
+    },
+    setWordOfTheDay(state, data){
+      state.wordOfTheDay = data;
     }
   },
   actions: {
@@ -140,9 +144,13 @@ export default new Vuex.Store({
     },
     async setBookmarkData({commit}, bookmarkData){
       commit("setBookmark", bookmarkData)
-    }    
-  },
-  async getWordOfTheDay(data){
-    console.log("book: ", data);
+    },  
+    async getWordOfTheDay({commit}){
+      const api_key = 'des0ruq4epok90di59jwn1aff5cauids5mxlpcx1rgnkvlmwy';
+      const response = await axios.get(`https://api.wordnik.com/v4/words.json/wordOfTheDay?api_key=${api_key}`);
+      if(response.status === 200){
+        commit("setWordOfTheDay", response.data)
+      }
+    },
   },
 })
